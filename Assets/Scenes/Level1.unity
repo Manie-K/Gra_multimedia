@@ -1121,8 +1121,8 @@ CapsuleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.051290154, y: -0.2755745}
-  m_Size: {x: 1.1164806, y: 1.4725343}
+  m_Offset: {x: -0.08075845, y: -0.30872637}
+  m_Size: {x: 1.1459491, y: 1.4062306}
   m_Direction: 0
 --- !u!114 &1609468462
 MonoBehaviour:
@@ -2342,6 +2342,4 @@ SceneRoots:
   - {fileID: 310046145}
   - {fileID: 1449121673}
   - {fileID: 1554681516}
-  - {fileID: 725877328}
-  - {fileID: 1692497361}
   - {fileID: 678945705}
