@@ -9,10 +9,10 @@ namespace Cplusiaki
         [Space(10)]
         [Range(0.01f, 15.0f)][SerializeField] private float jumpForce = 2f;
 
+        public LayerMask groundLayer;
+
         private Rigidbody2D rb;
         private Animator animator;
-
-        public LayerMask groundLayer;
 
         private float rayLength = 1.5f;
 
@@ -22,6 +22,7 @@ namespace Cplusiaki
         private bool isFacingRight = true;
 
         private int score = 0;
+        private int scoreIncreaseValue = 10;
 
         private const string tagNameBonus = "Bonus";
         private const string isGroundedAnimationParameter = "isGrounded";
@@ -66,16 +67,14 @@ namespace Cplusiaki
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            int increaseValue = 10;
             if(other.CompareTag(tagNameBonus))
             {
-                score += increaseValue;
-                Debug.Log("Score: " + score);
+                score += scoreIncreaseValue;
                 other.gameObject.SetActive(false);
+                
+                Debug.Log("Score: " + score);
             }
         }
-
-
 
         private void Jump()
         {
@@ -101,7 +100,6 @@ namespace Cplusiaki
             Vector3 theScale = transform.localScale;
             theScale.x *= -1;
             transform.localScale = theScale;
-
         }
     }
 }
