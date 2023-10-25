@@ -6,8 +6,12 @@ namespace Cplusiaki
     {
         [Header("Movement Parameters")]
         [Range(0.01f, 20.0f)][SerializeField] private float moveSpeed = 4f;
-        [Space(10)]
         [Range(0.01f, 15.0f)][SerializeField] private float jumpForce = 2f;
+        [Range(0.1f, 3.0f)][SerializeField] private float doubleJumpMultiplier = 1.5f;
+        [Range(0.01f, 10.0f)][SerializeField] private float gravityNormal = 1.25f;
+        [Range(0.01f, 10.0f)][SerializeField] private float gravityBoosted = 2.25f;
+        [Space(10)]
+        [SerializeField] private Transform downRayLeft, downRayRight;
 
         public LayerMask groundLayer;
 
@@ -20,6 +24,7 @@ namespace Cplusiaki
 
         private bool isWalking = false;
         private bool isFacingRight = true;
+        private bool isJumping = false;
 
         private int score = 0;
         private int scoreIncreaseValue = 10;
@@ -36,33 +41,9 @@ namespace Cplusiaki
 
         private void Update()
         {
-            isWalking = false;
-
-            //Right
-            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
-            {
-                if (!isFacingRight)
-                    Flip();
-
-                transform.Translate(moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
-                isWalking = true;
-            }
-
-            //Left
-            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
-            {
-                if (isFacingRight)
-                    Flip();
-                transform.Translate(-moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
-                isWalking = true;
-            }
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
-            {
-                Jump();
-            }
-
-            animator.SetBool(isGroundedAnimationParameter, IsGrounded());
-            animator.SetBool(isWalkingAnimationParameter, isWalking);
+            HandleInput();
+            HandleJump();
+            HandleAnimation();
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -82,16 +63,25 @@ namespace Cplusiaki
             {
                 doubleJumpUsed = false;
                 rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                isJumping = true;
             }
             else if (!doubleJumpUsed)
             {
                 doubleJumpUsed = true;
-                rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                rb.AddForce(Vector2.up * jumpForce * doubleJumpMultiplier, ForceMode2D.Impulse);
+                isJumping = true;
             }
         }
         private bool IsGrounded()
         {
-            return Physics2D.Raycast(this.transform.position, Vector2.down, rayLength, groundLayer.value);
+            bool touchingGround = Physics2D.Raycast(downRayLeft.position, Vector2.down, rayLength, groundLayer.value);
+
+            if(!touchingGround)
+            {
+                touchingGround = Physics2D.Raycast(downRayRight.position, Vector2.down, rayLength, groundLayer.value);
+            }
+
+            return touchingGround;
         }
  
         private void Flip()
@@ -100,6 +90,64 @@ namespace Cplusiaki
             Vector3 theScale = transform.localScale;
             theScale.x *= -1;
             transform.localScale = theScale;
+        }
+
+        private void HandleInput()
+        {
+            isWalking = false;
+         
+            //Right
+            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                if (!isFacingRight)
+                    Flip();
+
+                transform.Translate(moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
+                isWalking = true;
+            }
+
+            //Left
+            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                if (isFacingRight)
+                    Flip();
+                transform.Translate(-moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
+                isWalking = true;
+            }
+            //Jump
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
+            {
+                Jump();
+            }
+        }
+
+        private void HandleJump()
+        {
+            if (isJumping)
+            {
+                if (IsGrounded()) //deactivate isJumping
+                {
+                    isJumping = false;
+                }
+                else if (rb.velocity.y < 0)
+                {
+                    rb.gravityScale = gravityBoosted;
+                }
+                else if (rb.velocity.y >= 0)
+                {
+                    rb.gravityScale = gravityNormal;
+                }
+            }
+            else
+            {
+                rb.gravityScale = gravityNormal;
+            }
+        }
+
+        private void HandleAnimation()
+        {
+            animator.SetBool(isGroundedAnimationParameter, IsGrounded());
+            animator.SetBool(isWalkingAnimationParameter, isWalking);
         }
     }
 }
