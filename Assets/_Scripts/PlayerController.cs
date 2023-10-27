@@ -30,6 +30,7 @@ namespace Cplusiaki
         private int scoreIncreaseValue = 10;
 
         private const string tagNameBonus = "Bonus";
+        private const string tagNameLevelFinish = "Finish";
         private const string isGroundedAnimationParameter = "isGrounded";
         private const string isWalkingAnimationParameter = "isWalking";
 
@@ -54,6 +55,10 @@ namespace Cplusiaki
                 other.gameObject.SetActive(false);
                 
                 Debug.Log("Score: " + score);
+            }
+            if(other.CompareTag(tagNameLevelFinish))
+            {
+                Debug.Log("KONIEC POZIOMU!!!!!!!!!!!!!");
             }
         }
 
