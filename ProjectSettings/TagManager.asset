@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bonus
+  - Enemy
+  - Key
+  - Heart
+  - FallLevel
   layers:
   - Default
   - TransparentFX

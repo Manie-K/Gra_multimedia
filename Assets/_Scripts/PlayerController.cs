@@ -1,4 +1,6 @@
+using System.ComponentModel.Design;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Cplusiaki
 {
@@ -27,10 +29,23 @@ namespace Cplusiaki
         private bool isJumping = false;
 
         private int score = 0;
-        private int scoreIncreaseValue = 10;
+        private int scoreIncreaseValueCoin = 10;
+        private int scoreIncreaseValueEnemy = 50;
+
+        private int keysFound = 0;
+        private int keysNumber = 3;
+
+        private int lives = 3;
+
+        private Vector2 startPosition;
 
         private const string tagNameBonus = "Bonus";
+        private const string tagNameEnemy = "Enemy";
         private const string tagNameLevelFinish = "Finish";
+        private const string tagNameKey = "Key";
+        private const string tagNameHeart = "Heart";
+        private const string tagNameFallLevel = "FallLevel";
+
         private const string isGroundedAnimationParameter = "isGrounded";
         private const string isWalkingAnimationParameter = "isWalking";
 
@@ -38,6 +53,7 @@ namespace Cplusiaki
         {
             rb = GetComponent<Rigidbody2D>();
             animator = GetComponent<Animator>();
+            startPosition = transform.position;
         }
 
         private void Update()
@@ -49,16 +65,57 @@ namespace Cplusiaki
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if(other.CompareTag(tagNameBonus))
+            if (other.CompareTag(tagNameBonus))
             {
-                score += scoreIncreaseValue;
+                score += scoreIncreaseValueCoin;
                 other.gameObject.SetActive(false);
                 
                 Debug.Log("Score: " + score);
+                return;
             }
-            if(other.CompareTag(tagNameLevelFinish))
+            if (other.CompareTag(tagNameLevelFinish))
             {
-                Debug.Log("KONIEC POZIOMU!!!!!!!!!!!!!");
+                if(keysFound == keysNumber)
+                {
+                    Debug.Log("Player won the game!");
+                }
+                else
+                {
+                    Debug.Log($"Player has to collect all keys! Current progress: {keysFound}/{keysNumber}");
+                }
+                return;
+            }
+            if (other.CompareTag(tagNameEnemy))
+            {
+                if (transform.position.y > other.gameObject.transform.position.y)
+                {
+                    score += scoreIncreaseValueEnemy;
+                    Debug.Log("Killed an enemy!");
+                }
+                else
+                {
+                    Death();
+                }
+                return;
+            }
+            if (other.CompareTag(tagNameKey))
+            {
+                keysFound++;
+                Debug.Log($"Keys found: {keysFound}/{keysNumber}");
+                other.gameObject.SetActive(false);
+                return;
+            }
+            if (other.CompareTag(tagNameHeart))
+            {
+                lives++;
+                Debug.Log($"Life added. Lives left: {lives}");
+                other.gameObject.SetActive(false);
+                return;
+            }
+            if (other.CompareTag(tagNameFallLevel))
+            {
+                Death();
+                return;
             }
         }
 
@@ -73,6 +130,9 @@ namespace Cplusiaki
             else if (!doubleJumpUsed)
             {
                 doubleJumpUsed = true;
+                Vector3 tempVelocity = rb.velocity;
+                tempVelocity.y = 0f;
+                rb.velocity = tempVelocity;
                 rb.AddForce(Vector2.up * jumpForce * doubleJumpMultiplier, ForceMode2D.Impulse);
                 isJumping = true;
             }
@@ -153,6 +213,21 @@ namespace Cplusiaki
         {
             animator.SetBool(isGroundedAnimationParameter, IsGrounded());
             animator.SetBool(isWalkingAnimationParameter, isWalking);
+        }
+
+        private void Death()
+        {
+            lives--;
+            if (lives > 0)
+            {
+                transform.position = startPosition;
+                rb.velocity = Vector3.zero;
+                Debug.Log($"You died! Lives left: {lives}");
+            }
+            else
+            {
+                Debug.Log("GAME HAS ENDED, PLAYER LOST!!!");
+            }
         }
     }
 }
