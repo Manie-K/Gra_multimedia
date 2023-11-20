@@ -1,6 +1,4 @@
-using System.ComponentModel.Design;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Cplusiaki
 {
@@ -28,14 +26,11 @@ namespace Cplusiaki
         private bool isFacingRight = true;
         private bool isJumping = false;
 
-        private int score = 0;
+
         private int scoreIncreaseValueCoin = 10;
         private int scoreIncreaseValueEnemy = 50;
 
-        private int keysFound = 0;
         private int keysNumber = 3;
-
-        private int lives = 3;
 
         private Vector2 startPosition;
 
@@ -45,6 +40,7 @@ namespace Cplusiaki
         private const string tagNameKey = "Key";
         private const string tagNameHeart = "Heart";
         private const string tagNameFallLevel = "FallLevel";
+        private const string tagNameMovingPlatform = "MovingPlatform";
 
         private const string isGroundedAnimationParameter = "isGrounded";
         private const string isWalkingAnimationParameter = "isWalking";
@@ -58,6 +54,9 @@ namespace Cplusiaki
 
         private void Update()
         {
+            if (GameManager.Instance.currentState != GameState.GS_GAME)
+                return;
+
             HandleInput();
             HandleJump();
             HandleAnimation();
@@ -67,21 +66,20 @@ namespace Cplusiaki
         {
             if (other.CompareTag(tagNameBonus))
             {
-                score += scoreIncreaseValueCoin;
+                GameManager.Instance.AddPoints(scoreIncreaseValueCoin);
                 other.gameObject.SetActive(false);
-                
-                Debug.Log("Score: " + score);
+
                 return;
             }
             if (other.CompareTag(tagNameLevelFinish))
             {
-                if(keysFound == keysNumber)
+                if (GameManager.Instance.keysFound == keysNumber)
                 {
                     Debug.Log("Player won the game!");
                 }
                 else
                 {
-                    Debug.Log($"Player has to collect all keys! Current progress: {keysFound}/{keysNumber}");
+                    Debug.Log($"Player has to collect all keys! Current progress: {GameManager.Instance.keysFound}/{keysNumber}");
                 }
                 return;
             }
@@ -89,8 +87,8 @@ namespace Cplusiaki
             {
                 if (transform.position.y > other.gameObject.transform.position.y)
                 {
-                    score += scoreIncreaseValueEnemy;
-                    Debug.Log("Killed an enemy!");
+                    GameManager.Instance.AddPoints(scoreIncreaseValueEnemy);
+                    GameManager.Instance.AddKilledEnemy();
                 }
                 else
                 {
@@ -100,15 +98,13 @@ namespace Cplusiaki
             }
             if (other.CompareTag(tagNameKey))
             {
-                keysFound++;
-                Debug.Log($"Keys found: {keysFound}/{keysNumber}");
+                GameManager.Instance.AddKeys(GameManager.Instance.keysFound);
                 other.gameObject.SetActive(false);
                 return;
             }
             if (other.CompareTag(tagNameHeart))
             {
-                lives++;
-                Debug.Log($"Life added. Lives left: {lives}");
+                GameManager.Instance.AddLife(GameManager.Instance.lives);
                 other.gameObject.SetActive(false);
                 return;
             }
@@ -117,6 +113,20 @@ namespace Cplusiaki
                 Death();
                 return;
             }
+            if (other.CompareTag(tagNameMovingPlatform))
+            {
+                transform.SetParent(other.transform);
+                return;
+            }
+        }
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (other.CompareTag(tagNameMovingPlatform))
+            {
+                transform.SetParent(null);
+                return;
+            }
+
         }
 
         private void Jump()
@@ -141,14 +151,14 @@ namespace Cplusiaki
         {
             bool touchingGround = Physics2D.Raycast(downRayLeft.position, Vector2.down, rayLength, groundLayer.value);
 
-            if(!touchingGround)
+            if (!touchingGround)
             {
                 touchingGround = Physics2D.Raycast(downRayRight.position, Vector2.down, rayLength, groundLayer.value);
             }
 
             return touchingGround;
         }
- 
+
         private void Flip()
         {
             isFacingRight = !isFacingRight;
@@ -160,7 +170,7 @@ namespace Cplusiaki
         private void HandleInput()
         {
             isWalking = false;
-         
+
             //Right
             if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
@@ -217,12 +227,12 @@ namespace Cplusiaki
 
         private void Death()
         {
-            lives--;
-            if (lives > 0)
+            GameManager.Instance.DeleteLife();
+            if (GameManager.Instance.lives > 0)
             {
                 transform.position = startPosition;
                 rb.velocity = Vector3.zero;
-                Debug.Log($"You died! Lives left: {lives}");
+                Debug.Log($"You died! Lives left: {GameManager.Instance.lives}");
             }
             else
             {

@@ -1,30 +1,57 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class MovingPlatformController : MonoBehaviour
 {
-    [SerializeField] private Transform pointA;
-    [SerializeField] private Transform pointB;
-    [SerializeField] private float distanceZone;
-    [SerializeField] private float speed = 1.5f;
+    [Header("Movement settings")]
+    [SerializeField] private float moveSpeed = 4f;
 
-    private Vector2 targetA;
-    private Vector2 targetB;
-    private Vector2 target;
+    private float startPositionX;
+
+    public float moveRange = 3f;
+
+    private bool isMovingRight = false;
+
 
     private void Awake()
     {
-        target = targetA = pointA.position;
-        targetB = pointB.position;
+        startPositionX = transform.position.x;
     }
-    void Update()
-    {
-        transform.position = Vector3.Lerp(transform.position, target, Time.deltaTime*speed);
-        float distanceToTarget = Vector3.Distance(transform.position, target);
 
-        if (distanceToTarget <= distanceZone )
+    private void Update()
+    {
+        if (isMovingRight)
         {
-            target = target == targetA ? targetB : targetA;
+            if (transform.position.x > startPositionX + moveRange)
+            {
+                isMovingRight = false;
+                MoveLeft();
+            }
+            else
+            {
+                MoveRight();
+            }
         }
+        else
+        {
+            if (transform.position.x < startPositionX - moveRange)
+            {
+                isMovingRight = true;
+                MoveRight();
+            }
+            else
+            {
+                MoveLeft();
+            }
+        }
+    }
+
+    private void MoveRight()
+    {
+        transform.Translate(moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
+    }
+
+    private void MoveLeft()
+    {
+        transform.Translate(-moveSpeed * Time.deltaTime, 0.0f, 0.0f, Space.World);
     }
 }
