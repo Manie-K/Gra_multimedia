@@ -63,6 +63,8 @@ public class EnemyController : MonoBehaviour
             {
                 animator.SetBool(isDeadAnimationParameter, true);
                 StartCoroutine(KillOnAnimationEnd());
+                
+                
             }
         }
     }

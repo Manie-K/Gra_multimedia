@@ -12,11 +12,16 @@ namespace Cplusiaki
         [Range(0.01f, 10.0f)][SerializeField] private float gravityBoosted = 2.25f;
         [Space(10)]
         [SerializeField] private Transform downRayLeft, downRayRight;
+        [Space(10)]
+        [SerializeField] private AudioClip bonusSound;
+        [SerializeField] private AudioClip enemyKillSound;
+
 
         public LayerMask groundLayer;
 
         private Rigidbody2D rb;
         private Animator animator;
+        private AudioSource source;
 
         private float rayLength = 1.5f;
 
@@ -45,10 +50,13 @@ namespace Cplusiaki
         private const string isGroundedAnimationParameter = "isGrounded";
         private const string isWalkingAnimationParameter = "isWalking";
 
+
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             animator = GetComponent<Animator>();
+            source = GetComponent<AudioSource>();
             startPosition = transform.position;
         }
 
@@ -68,6 +76,7 @@ namespace Cplusiaki
             {
                 GameManager.Instance.AddPoints(scoreIncreaseValueCoin);
                 other.gameObject.SetActive(false);
+                source.PlayOneShot(bonusSound, AudioListener.volume);
 
                 return;
             }
@@ -75,7 +84,8 @@ namespace Cplusiaki
             {
                 if (GameManager.Instance.keysFound == keysNumber)
                 {
-                    Debug.Log("Player won the game!");
+                    GameManager.Instance.AddPoints(100 * GameManager.Instance.lives);
+                    GameManager.Instance.LevelCompleted();
                 }
                 else
                 {
@@ -89,6 +99,8 @@ namespace Cplusiaki
                 {
                     GameManager.Instance.AddPoints(scoreIncreaseValueEnemy);
                     GameManager.Instance.AddKilledEnemy();
+                    source.PlayOneShot(enemyKillSound, AudioListener.volume);
+
                 }
                 else
                 {
@@ -100,12 +112,16 @@ namespace Cplusiaki
             {
                 GameManager.Instance.AddKeys(GameManager.Instance.keysFound);
                 other.gameObject.SetActive(false);
+                source.PlayOneShot(bonusSound, AudioListener.volume);
+
                 return;
             }
             if (other.CompareTag(tagNameHeart))
             {
                 GameManager.Instance.AddLife(GameManager.Instance.lives);
                 other.gameObject.SetActive(false);
+                source.PlayOneShot(bonusSound, AudioListener.volume);
+
                 return;
             }
             if (other.CompareTag(tagNameFallLevel))
@@ -232,7 +248,6 @@ namespace Cplusiaki
             {
                 transform.position = startPosition;
                 rb.velocity = Vector3.zero;
-                Debug.Log($"You died! Lives left: {GameManager.Instance.lives}");
             }
             else
             {
